@@ -1,5 +1,6 @@
 const express = require('express')
-const bodyParser = require('body-parser') 
+const bodyParser = require('body-parser')
+const morgan = require('morgan')
 const app = express()
 
 let notes = [
@@ -26,6 +27,8 @@ let notes = [
 ]
 
 app.use(bodyParser.json())
+
+app.use(morgan('tiny'))
 
 const generateId = () => {
     return Math.floor(Math.random() * Math.floor(1000))
