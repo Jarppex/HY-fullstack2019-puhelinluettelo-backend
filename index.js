@@ -1,6 +1,13 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
+
+morgan.token('body', function getBody (req) {
+    if (req.method === 'POST') {
+        return JSON.stringify(req.body)
+    }
+  })
+
 const app = express()
 
 let notes = [
@@ -28,7 +35,7 @@ let notes = [
 
 app.use(bodyParser.json())
 
-app.use(morgan('tiny'))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 const generateId = () => {
     return Math.floor(Math.random() * Math.floor(1000))
