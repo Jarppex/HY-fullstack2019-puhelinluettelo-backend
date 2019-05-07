@@ -28,6 +28,16 @@ app.get('/api/persons', (request, response) => {
     response.json(notes)
   })
 
+app.get('/info', (request, response) => {
+    const numberOfNotes = notes.length
+    const currentDate = new Date().toString()
+    let info = `Puhelinluettelossa on ${numberOfNotes} henkilon tiedot`
+    response.write(info)
+    response.write('\n')
+    response.write(currentDate)
+    response.end()
+  })
+
 const PORT = 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
