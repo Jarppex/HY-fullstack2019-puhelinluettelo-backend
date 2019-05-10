@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
@@ -10,6 +11,7 @@ morgan.token('body', function getBody (req) {
   })
 
 const app = express()
+const Person = require('./models/person')
 
 let notes = [
     {
@@ -42,9 +44,22 @@ app.use(bodyParser.json())
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
+/*
 const generateId = () => {
     return Math.floor(Math.random() * Math.floor(1000))
-  }
+}
+*/
+app.get('/api/persons', (request, response) => {
+  Person.find({}).then(persons => {
+    response.json(persons.map(person => person.toJSON()))
+  })
+})
+
+app.get('/api/persons/:id', (request, response) => {
+  Person.findById(request.params.id).then(person => {
+    response.json(person.toJSON())
+  })
+})
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
@@ -53,35 +68,21 @@ app.post('/api/persons', (request, response) => {
       return response.status(400).json({ error: 'content missing' })
     }
 
+    /*
     const sameName = notes.find(note => note.name === body.name)
     if (sameName) {
       return response.status(403).json({ error: 'name must be unique' })
     }
+    */
   
-    const note = {
-      id: generateId(),
+    const person = new Person({
       name: body.name,
       number: body.number
-    }
+    })
   
-    notes = notes.concat(note)
-  
-    response.json(note)
-  })
-
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const note = notes.find(note => note.id === id)
-
-    if (note) {
-      response.json(note)
-    } else {
-      response.status(404).end()
-    }
-  })
-
-app.get('/api/persons', (request, response) => {
-    response.json(notes)
+    person.save().then(savedPerson => {
+      response.json(savedPerson.toJSON())
+    })
   })
 
 app.get('/info', (request, response) => {
@@ -101,7 +102,7 @@ app.delete('/api/persons/:id', (request, response) => {
     response.status(204).end()
   })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
