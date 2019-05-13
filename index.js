@@ -1,27 +1,28 @@
+/* eslint-disable no-undef */
 // setup
 require('dotenv').config()
-const express = require('express')
-const cors = require('cors')
-const bodyParser = require('body-parser')
-const morgan = require('morgan')
+import express, { staticExpress } from 'express';
+import cors from 'cors';
+import { json } from 'body-parser';
+import morgan, { token } from 'morgan';
 
-morgan.token('body', function getBody (req) {
-    if (req.method === 'POST') {
-        return JSON.stringify(req.body)
-    }
-  })
+token('body', function getBody (req) {
+  if (req.method === 'POST') {
+    return JSON.stringify(req.body)
+  }
+})
 
 const app = express()
-const Person = require('./models/person')
+import Person, { find, findById, findByIdAndUpdate, findByIdAndRemove } from './models/person';
 
-app.use(express.static('build'))
+app.use(staticExpress('build'))
 app.use(cors())
-app.use(bodyParser.json())
+app.use(json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 // GET
 app.get('/api/persons', (request, response) => {
-  Person.find({})
+  find({})
     .then(persons => {
       response.json(persons.map(person => person.toJSON()))
     })
@@ -29,12 +30,12 @@ app.get('/api/persons', (request, response) => {
 
 // GET
 app.get('/api/persons/:id', (request, response, next) => {
-  Person.findById(request.params.id)
+  findById(request.params.id)
     .then(person => {
       if (person) {
         response.json(person.toJSON())
       } else {
-        response.status(404).end() 
+        response.status(404).end()
       }
     })
     .catch(error => next(error))
@@ -42,7 +43,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 // GET
 app.get('/info', (request, response) => {
-  Person.find({}).then(persons => {
+  find({}).then(persons => {
     const numberOfPersons = persons.length
     const currentDate = new Date().toString()
     let info = `Puhelinluettelossa on ${numberOfPersons} henkilon tiedot`
@@ -83,7 +84,7 @@ app.put('/api/persons/:id', (request, response, next) => {
     number: body.number
   }
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  findByIdAndUpdate(request.params.id, person, { new: true })
     .then(savedPerson => savedPerson.toJSON())
     .then(savedAndFormatedPerson => {
       response.json(savedAndFormatedPerson)
@@ -93,8 +94,8 @@ app.put('/api/persons/:id', (request, response, next) => {
 
 // DELETE
 app.delete('/api/persons/:id', (request, response, next) => {
-  Person.findByIdAndRemove(request.params.id)
-    .then(result => {
+  findByIdAndRemove(request.params.id)
+    .then(() => {
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -110,11 +111,11 @@ app.use(unknownEndpoint)
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'malformatted id' })
   }
   else if (error.name === 'ValidationError') {
-    return response.status(400).json({ error: error.message })    
+    return response.status(400).json({ error: error.message })
   }
   next(error)
 }
